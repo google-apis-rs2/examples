@@ -3,7 +3,7 @@
 ## Requirements
 
 - [Google service account](https://developers.google.com/identity/protocols/oauth2/service-account#creatinganaccount)
-  - See [`example.env`](../example.env) for an example of what your `.env` file should look like.
+  - See [`example.env`](../../example.env) for an example of what your `.env` file should look like.
     Please place it in the root of the workspace. (Next to `example.env`)
 
 ## What it does
