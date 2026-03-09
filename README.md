@@ -1,5 +1,6 @@
-# rust-crate-template
-Intended to be used as a starter for a crate
+# google-apis-rs2 Examples
+
+Simple examples to use the google APIs in Rust.
 
 ## License
 
