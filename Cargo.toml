@@ -1,0 +1,7 @@
+[workspace]
+resolver = "2"
+members = []
+
+[workspace.dependencies]
+# https://doc.rust-lang.org/cargo/reference/overriding-dependencies.html#testing-a-bugfix
+[patch.crates-io]
