@@ -1,0 +1,4 @@
+# `wrap_comments` is unstable so to use you need to use nightly.
+# To use run `cargo +nightly fmt`
+
+wrap_comments = true
