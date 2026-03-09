@@ -3,5 +3,19 @@ resolver = "2"
 members = ["crates/sheets"]
 
 [workspace.dependencies]
+anyhow = "1.0.102"
+clap = { version = "4.5.60", features = ["cargo", "env", "derive", "wrap_help"] }
+google-sheets4 = "7.0.0"
+hyper = "1.8.1"
+hyper-rustls = { version = "0.27.7", features = ["aws-lc-rs"] }
+loadenv = "0.1.4"
+rustls = { version = "0.23.36", features = ["aws-lc-rs"] }
+secrecy = { version = "0.10.3", features = ["serde"] }
+serde = "1.0.228"
+serde_json = "1.0.149"
+tokio = { version = "1.49.0", features = ["full"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.22", features = ["env-filter"] }
+
 # https://doc.rust-lang.org/cargo/reference/overriding-dependencies.html#testing-a-bugfix
 [patch.crates-io]
