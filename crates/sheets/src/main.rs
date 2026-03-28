@@ -41,11 +41,17 @@ async fn main() -> anyhow::Result<()> {
 
     let hub = get_authorized_sheet_client(&clap_config).await?;
 
-    let response =
-        read_a_single_cell_from_sheet(&hub, &clap_config.spreadsheet_id, "Sheet1:A1").await?;
+    let cell_value =
+        read_a_single_cell_from_sheet(&hub, &clap_config.spreadsheet_id, "Sheet1!A1").await?;
 
-    // Update the value
-    // TODO (c-git): Update the value
+    // Update the value and write to sheet
+    write_a_single_cell_to_sheet(
+        &hub,
+        &clap_config.spreadsheet_id,
+        "Sheet1!A1",
+        cell_value + 1,
+    )
+    .await?;
 
     // Write the value back to the sheet
     // TODO (c-git): Need to update this code to write the value updated above
@@ -83,6 +89,39 @@ async fn main() -> anyhow::Result<()> {
     }
 
     Ok(())
+}
+
+#[instrument(skip(hub))]
+async fn update_range(
+    hub: &Hub,
+    spreadsheet_id: &str,
+    range: impl AsRefStr,
+    values: ValueRange,
+) -> anyhow::Result<()> {
+    let response = hub
+        .spreadsheets()
+        .values_update(values, spreadsheet_id, range.as_ref())
+        .value_input_option("USER_ENTERED")
+        .include_values_in_response(false)
+        .doit()
+        .await
+        .context("failed to update values on sheet")?;
+    debug!("Response: {response:?}");
+    Ok(())
+}
+
+#[instrument(skip(hub))]
+async fn write_a_single_cell_to_sheet(
+    hub: &Hub,
+    spreadsheet_id: &str,
+    range: impl AsRefStr,
+    value: impl IntoSerdeJsonValue,
+) -> anyhow::Result<()> {
+    let req = ValueRange {
+        values: Some(vec![vec![value.into()]]),
+        ..Default::default()
+    };
+    update_range(hub, spreadsheet_id, range, req).await
 }
 
 #[instrument(skip_all)]
@@ -201,6 +240,6 @@ async fn read_range(
         .doit()
         .await
         .context("failed to get values")?;
-    debug!("{:?}", response.0);
+    debug!("Response {:?}", response);
     Ok(response.1)
 }
