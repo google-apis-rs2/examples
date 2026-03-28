@@ -85,13 +85,14 @@ async fn main() -> anyhow::Result<()> {
     let hub = Sheets::new(client, auth);
 
     // Read value from Sheet1!A1
+    let task_name = "read a single cell from sheet";
     let result = hub
         .spreadsheets()
         .values_get(&clap_config.spreadsheet_id, "Sheet1!A1")
         .doit()
         .await
-        .context("failed to read a single cell from sheet")?;
-    println!("# Response to read a single cell from sheet:\n {result:#?}\n");
+        .with_context(|| format!("failed to {task_name}"))?;
+    println!("# Response to {task_name}:\n {result:#?}\n");
 
     // Update the value
     // TODO (c-git): Update the value
