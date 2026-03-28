@@ -21,6 +21,12 @@ use tracing_subscriber::{
 
 type Hub = Sheets<HttpsConnector<HttpConnector>>;
 
+trait AsRefStr: AsRef<str> + Debug {}
+impl<U: AsRef<str> + Debug> AsRefStr for U {}
+
+trait IntoSerdeJsonValue: Into<serde_json::Value> + Debug {}
+impl<U: Into<serde_json::Value> + Debug> IntoSerdeJsonValue for U {}
+
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     setup_tracing_and_crypto_provider()?;
@@ -148,10 +154,10 @@ fn setup_tracing_and_crypto_provider() -> anyhow::Result<()> {
 }
 
 #[instrument(skip(hub), ret)]
-async fn read_a_single_cell_from_sheet<S: AsRef<str> + Debug>(
+async fn read_a_single_cell_from_sheet(
     hub: &Hub,
     spreadsheet_id: &str,
-    range: S,
+    range: impl AsRefStr,
 ) -> anyhow::Result<i64> {
     let response = read_range(hub, spreadsheet_id, range).await?;
     info!("Response ValueRange: {response:?}");
@@ -184,10 +190,10 @@ fn json_value_to_i64(value: &serde_json::Value) -> anyhow::Result<i64> {
 
 #[instrument(skip(hub), ret(level = Level::DEBUG))]
 /// Read value from a range
-async fn read_range<S: AsRef<str> + Debug>(
+async fn read_range(
     hub: &Hub,
     spreadsheet_id: &str,
-    range: S,
+    range: impl AsRefStr,
 ) -> anyhow::Result<ValueRange> {
     let response = hub
         .spreadsheets()
