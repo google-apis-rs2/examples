@@ -64,6 +64,7 @@ async fn main() -> anyhow::Result<()> {
             hyper_util::client::legacy::Client::builder(executor).build(connector),
         ),
     )
+    .persist_tokens_to_disk("google_tokens.json")
     .build()
     .await?;
 
@@ -76,8 +77,6 @@ async fn main() -> anyhow::Result<()> {
                 .build(),
         );
     let hub = Sheets::new(client, auth);
-    // TODO (c-git): Look at CLI and see how to save token to not need to reauthenticate for each request
-    // TODO (c-git): Persist token between runs of the program (if possible)
 
     // Read value from Sheet1!A1
     let result = hub
