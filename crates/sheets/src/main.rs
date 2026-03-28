@@ -1,4 +1,4 @@
-use anyhow::bail;
+use anyhow::{Context, bail};
 use clap::Parser as _;
 use google_sheets4::{
     Error as GSError, Sheets, api::ValueRange, hyper_rustls, hyper_util, yup_oauth2,
@@ -15,17 +15,22 @@ use tracing_subscriber::{
 
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
-    // TODO (c-git): Add context on the errors
-
-    tracing_subscriber::registry()
+    let result_tracing_subscriber = tracing_subscriber::registry()
         .with(fmt::layer().with_span_events(FmtSpan::NEW | FmtSpan::CLOSE))
         .with(EnvFilter::try_from_default_env().unwrap_or_else(|_| EnvFilter::new("warn")))
-        .init();
+        .try_init();
+    match result_tracing_subscriber {
+        Ok(()) => {}
+        Err(err_msg) => eprintln!("failed to setup tracing subscriber: {err_msg:?}"),
+    };
 
     // Install crypto provider
-    rustls::crypto::aws_lc_rs::default_provider()
+    let did_provider_install_pass = rustls::crypto::aws_lc_rs::default_provider()
         .install_default()
-        .expect("failed to install AWS-LC provider");
+        .is_ok();
+    if !did_provider_install_pass {
+        bail!("failed to install AWS-LC provider");
+    }
 
     match loadenv::load() {
         Ok(was_found) => debug!(".env file was found: {was_found}"),
@@ -66,7 +71,8 @@ async fn main() -> anyhow::Result<()> {
     )
     .persist_tokens_to_disk("google_tokens.json")
     .build()
-    .await?;
+    .await
+    .context("failed to create authenticator")?;
 
     let client = hyper_util::client::legacy::Client::builder(hyper_util::rt::TokioExecutor::new())
         .build(
@@ -83,8 +89,9 @@ async fn main() -> anyhow::Result<()> {
         .spreadsheets()
         .values_get(&clap_config.spreadsheet_id, "Sheet1!A1")
         .doit()
-        .await;
-    dbg!(result)?;
+        .await
+        .context("failed to read a single cell from sheet")?;
+    println!("# Response to read a single cell from sheet:\n {result:#?}\n");
 
     // Update the value
     // TODO (c-git): Update the value
